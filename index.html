@@ -399,7 +399,7 @@ body {
       <div style="display:flex;align-items:center;gap:16px;">
         <span class="diff-badge easy" id="d-diffbadge">Easy</span>
         <div class="hs-group">
-          <span class="hs-label">🏆 High Score</span>
+          <span class="hs-label" id="d-hs-label">🏆 Best (Easy)</span>
           <span class="hs-value" id="d-highscore">0</span>
         </div>
       </div>
@@ -514,7 +514,7 @@ body {
         </div>
         <div class="goal-bar-track"><div class="goal-bar-fill" id="m-goalbar" style="width:0%"></div></div>
       </div>
-      <div class="m-hs-row" style="margin-top:8px;">🏆 Best:&nbsp;<strong id="m-highscore">0</strong> &nbsp;|&nbsp; <span class="diff-badge easy" id="m-diffbadge" style="font-size:9px;padding:2px 8px;">Easy</span></div>
+      <div class="m-hs-row" style="margin-top:8px;">🏆 Best (<span id="m-hs-diff">Easy</span>):&nbsp;<strong id="m-highscore">0</strong> &nbsp;|&nbsp; <span class="diff-badge easy" id="m-diffbadge" style="font-size:9px;padding:2px 8px;">Easy</span></div>
     </div>
 
     <div class="game-area m-area" id="m-area">
@@ -658,13 +658,12 @@ const SFX = (() => {
 })();
 
 /* ── Difficulty Config ── */
-// speedMult = base fall speed multiplier
-// spawnMult = spawn interval multiplier (lower = faster spawning)
-// speedStep = collected drops between each speed-up (lower = ramps faster)
+// speedStep = drops between each speed-up (lower = ramps faster, difficulty indicator)
+// All modes start at the same base speed and spawn rate.
 const DIFFICULTIES = {
-  easy:   { label: 'Easy',   emoji: '💚', lives: 3, speedMult: 0.6,  spawnMult: 1.4,  speedStep: 10, waterPts: 10, desc: 'Slow drops · +10 pts per drop · Ramps every 10' },
-  normal: { label: 'Normal', emoji: '💙', lives: 3, speedMult: 1.0,  spawnMult: 1.0,  speedStep: 6,  waterPts: 15, desc: 'Medium speed · +15 pts per drop · Ramps every 6' },
-  hard:   { label: 'Hard',   emoji: '❤️', lives: 3, speedMult: 1.4,  spawnMult: 0.75, speedStep: 3,  waterPts: 25, desc: 'Fast drops · +25 pts per drop · Ramps every 3' },
+  easy:   { label: 'Easy',   emoji: '💚', lives: 3, speedStep: 10, waterPts: 10, desc: '+10 pts per drop · Speed ramps every 10 catches' },
+  normal: { label: 'Normal', emoji: '💙', lives: 3, speedStep: 6,  waterPts: 15, desc: '+15 pts per drop · Speed ramps every 6 catches' },
+  hard:   { label: 'Hard',   emoji: '❤️', lives: 3, speedStep: 3,  waterPts: 25, desc: '+25 pts per drop · Speed ramps every 3 catches!' },
 };
 
 /* ── Milestone Messages ── */
@@ -687,7 +686,7 @@ const Game = (() => {
   const SPEED_INC    = 0.15;
   const MAX_SPEED    = 2.8;
   const DROP_PX      = 48;
-  const LS_KEY       = 'wdc_hs2';
+  const LS_KEY = (diff) => 'wdc_hs_' + diff;
 
   let S = freshState();
   let selectedDiff = 'easy';
@@ -703,7 +702,7 @@ const Game = (() => {
       missed:      0,
       speed:       1.0,
       running:     false,
-      hs:          Number(localStorage.getItem(LS_KEY) || 0),
+      hs:          0,
       drops:       [],
       spawnTid:    null,
       rafId:       null,
@@ -726,6 +725,8 @@ const Game = (() => {
     ['d','m'].forEach(p => {
       const sc = $(`${p}-score`);     if (sc) sc.textContent = S.score.toLocaleString();
       const hs = $(`${p}-highscore`); if (hs) hs.textContent = S.hs.toLocaleString();
+      const hsl = $('d-hs-label');   if (hsl && p==='d') hsl.textContent = '\u{1F3C6} Best (' + (DIFFICULTIES[S.diff]?.label || 'Easy') + ')';
+      const hsd = $('m-hs-diff');    if (hsd && p==='m') hsd.textContent = DIFFICULTIES[S.diff]?.label || 'Easy';
       const co = $(`${p}-collected`); if (co) co.textContent = S.collected;
       const mi = $(`${p}-missed`);    if (mi) mi.textContent = S.missed;
       const sp = $(`${p}-speed`);     if (sp) sp.textContent = S.speed.toFixed(1) + '×';
@@ -856,7 +857,7 @@ const Game = (() => {
     const H     = a.clientHeight;
     const diff  = DIFFICULTIES[S.diff];
     const water = Math.random() < WATER_CHANCE;
-    const dur   = (BASE_FALL_MS / S.speed) * (1 / diff.speedMult) + (Math.random() * 400 - 200);
+    const dur   = (BASE_FALL_MS / S.speed) + (Math.random() * 400 - 200);
     const x     = Math.max(4, Math.random() * (W - DROP_PX - 4));
 
     const el = document.createElement('div');
@@ -961,13 +962,13 @@ const Game = (() => {
     const diff = DIFFICULTIES[S.diff];
     // speedStep from difficulty: how many catches before each speed-up
     const step = diff.speedStep;
-    S.speed = Math.min(MAX_SPEED, (1.0 + Math.floor(S.collected / step) * SPEED_INC) * diff.speedMult);
+    S.speed = Math.min(MAX_SPEED, 1.0 + Math.floor(S.collected / step) * SPEED_INC);
   }
 
   function scheduleSpawn() {
     if (!S.running) return;
     const diff  = DIFFICULTIES[S.diff];
-    const delay = (BASE_SPAWN_MS / S.speed) * diff.spawnMult * (0.75 + Math.random() * 0.5);
+    const delay = (BASE_SPAWN_MS / S.speed) * (0.75 + Math.random() * 0.5);
     S.spawnTid = setTimeout(() => {
       if (!S.running) return;
       spawnDrop();
@@ -1017,7 +1018,7 @@ function clearDrops() {
     const beatHigh = S.score > S.hs;
     if (beatHigh) {
       S.hs = S.score;
-      localStorage.setItem(LS_KEY, S.hs);
+      localStorage.setItem(LS_KEY(S.diff), S.hs);
     }
     syncUI();
 
@@ -1058,12 +1059,12 @@ function clearDrops() {
 
     S = {
       ...freshState(),
-      hs:          S.hs,
+      hs:          Number(localStorage.getItem(LS_KEY(selectedDiff)) || 0),
       prefix,
       running:     true,
       diff:        selectedDiff,
       lives:       diff.lives,
-      speed:       diff.speedMult,
+      speed:       1.0,
       timeLeft:    null,
       currentGoal: GOAL_BASE,
       goalLevel:   1,
@@ -1087,7 +1088,7 @@ function clearDrops() {
     clearTimeout(fbTid);
     clearDrops();
 
-    S = { ...freshState(), hs: S.hs, prefix };
+    S = { ...freshState(), hs: Number(localStorage.getItem(LS_KEY(selectedDiff)) || 0), prefix };
     $('d-feedback') && ($('d-feedback').className = 'feedback-pill');
     $('m-feedback') && ($('m-feedback').className = 'm-feedback hidden');
 
