@@ -5,11 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Water Drop Collector · charity: water</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-
+  <link href="https://fonts.googleapis.com/css2?family=Proxima+Nova:wght@400;600;700;800;900&family=Nunito:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <style>
 /* ================================================================
-   WATER DROP COLLECTOR — style.css (inlined)
+   WATER DROP COLLECTOR — Enhanced Edition
    Brand palette: charity: water
    #FFC907 yellow | #2E9DF7 blue | #8BC34A green | #E91C23 red
 ================================================================ */
@@ -21,6 +20,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
   --yellow-dk: #e6b400;
   --blue:      #2E9DF7;
   --blue-lt:   #4FC3F7;
+  --blue-dk:   #1565C0;
   --green:     #8BC34A;
   --green-dk:  #558B2F;
   --red:       #E91C23;
@@ -38,12 +38,12 @@ body {
   background: linear-gradient(145deg, #D6F0FF 0%, #8DCFF0 55%, #5BB8E8 100%);
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 16px;
+  justify-content: flex-start;
+  padding: 16px 16px 0;
 }
 
-/* ── Confetti canvas ── */
 #confettiCanvas {
   position: fixed; inset: 0;
   width: 100%; height: 100%;
@@ -56,7 +56,7 @@ body {
 .layout.desktop{ display: flex; }
 @media (max-width: 700px) {
   .layout.desktop { display: none; }
-  .layout.mobile  { display: flex;  }
+  .layout.mobile  { display: flex; }
 }
 
 /* ── Shared card ── */
@@ -73,20 +73,42 @@ body {
 }
 
 /* ── Logo ── */
-.logo-group { display: flex; align-items: center; gap: 8px; }
-.logo-drop  { font-size: 24px; }
-.logo-text  { font-size: 18px; font-weight: 900; color: var(--blue); letter-spacing: -.3px; }
+.logo-group { display: flex; align-items: center; gap: 10px; }
+.logo-drop  { font-size: 26px; }
+.logo-text  { font-size: 19px; font-weight: 900; color: var(--blue); letter-spacing: -.3px; }
+.logo-sub   { font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+
+/* ── Difficulty Badge ── */
+.diff-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800;
+  letter-spacing: .8px; text-transform: uppercase;
+}
+.diff-badge.easy   { background: #E8F5E9; color: var(--green-dk); }
+.diff-badge.normal { background: #E3F2FD; color: var(--blue-dk); }
+.diff-badge.hard   { background: #FFEBEE; color: var(--red); }
+
+/* ── Goal progress bar ── */
+.goal-bar-wrap { width: 100%; }
+.goal-label { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 5px; }
+.goal-bar-track { width: 100%; height: 8px; background: rgba(0,0,0,.08); border-radius: 8px; overflow: hidden; }
+.goal-bar-fill  { height: 100%; background: linear-gradient(90deg, var(--blue), var(--blue-lt)); border-radius: 8px; transition: width .3s ease; }
 
 /* ── High score ── */
 .hs-group   { text-align: right; }
 .hs-label   { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
 .hs-value   { font-family: var(--mono); font-size: 24px; font-weight: 700; color: var(--yellow-dk); }
 
-/* ── Pill (score / lives on desktop sub-header) ── */
+/* ── Pill ── */
 .pill     { display: flex; flex-direction: column; gap: 1px; }
 .pill-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
 .pill-val { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.1; }
 .pill-val.hearts { font-size: 18px; letter-spacing: 3px; }
+
+/* ── Timer pill ── */
+.timer-pill { font-family: var(--mono); font-size: 20px; font-weight: 700; }
+.timer-pill.urgent { color: var(--red); animation: pulse 0.5s ease infinite alternate; }
+@keyframes pulse { from { opacity: 1; } to { opacity: .5; } }
 
 /* ── Legend ── */
 .leg-row             { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
@@ -140,6 +162,26 @@ body {
 .drop:hover  { transform: scale(1.12); }
 .drop:active { transform: scale(0.92); }
 
+/* Drop removal animation */
+.drop.collecting {
+  animation: collectPop 0.25s ease forwards;
+  pointer-events: none;
+}
+.drop.polluting {
+  animation: pollPop 0.25s ease forwards;
+  pointer-events: none;
+}
+@keyframes collectPop {
+  0%   { transform: scale(1); opacity: 1; }
+  50%  { transform: scale(1.4); opacity: .8; }
+  100% { transform: scale(0); opacity: 0; }
+}
+@keyframes pollPop {
+  0%   { transform: scale(1) rotate(0); opacity: 1; }
+  50%  { transform: scale(1.2) rotate(20deg); opacity: .6; }
+  100% { transform: scale(0) rotate(45deg); opacity: 0; }
+}
+
 /* ── Score pop ── */
 .score-pop {
   position: absolute; font-family: var(--mono); font-size: 15px; font-weight: 700;
@@ -153,25 +195,56 @@ body {
   100% { opacity: 0; transform: translateY(-48px) scale(1.3); }
 }
 
+/* ── Milestone toast ── */
+.milestone-toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(30px);
+  background: linear-gradient(135deg, var(--yellow), var(--yellow-dk));
+  color: #1A2E3B; font-weight: 900; font-size: 15px;
+  padding: 12px 24px; border-radius: 30px;
+  box-shadow: 0 6px 24px rgba(255,201,7,.45);
+  z-index: 500; pointer-events: none; opacity: 0;
+  transition: opacity .3s, transform .3s;
+  text-align: center; max-width: 280px;
+}
+.milestone-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
 /* ── Overlay ── */
 .overlay {
   position: absolute; inset: 0;
   background: rgba(255,255,255,.82); backdrop-filter: blur(7px);
   display: none; align-items: center; justify-content: center;
   border-radius: calc(var(--r) - 2px); z-index: 20;
+  overflow-y: auto;
 }
 .overlay.active { display: flex; }
-.ov-box   { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px; text-align: center; }
-.ov-icon  { font-size: 44px; }
-.ov-title { font-size: 22px; font-weight: 900; color: var(--blue); }
+.ov-box   { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 20px; text-align: center; width: 100%; }
+.ov-icon  { font-size: 34px; }
+.ov-title { font-size: 18px; font-weight: 900; color: var(--blue); }
 .ov-sub   { font-size: 13px; color: var(--muted); line-height: 1.55; max-width: 260px; }
-.ov-btn   {
+
+/* Difficulty selector */
+.diff-select { display: flex; gap: 8px; margin: 4px 0; }
+.diff-btn {
+  padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 800;
+  letter-spacing: .6px; cursor: pointer; border: 2px solid transparent;
+  transition: all .15s;
+}
+.diff-btn.easy   { background: #E8F5E9; color: var(--green-dk); border-color: #A5D6A7; }
+.diff-btn.normal { background: #E3F2FD; color: var(--blue-dk); border-color: #90CAF9; }
+.diff-btn.hard   { background: #FFEBEE; color: var(--red); border-color: #EF9A9A; }
+.diff-btn.active { transform: scale(1.06); box-shadow: 0 3px 10px rgba(0,0,0,.15); }
+.diff-btn.easy.active   { background: var(--green-dk); color: #fff; }
+.diff-btn.normal.active { background: var(--blue); color: #fff; }
+.diff-btn.hard.active   { background: var(--red); color: #fff; }
+
+.ov-btn {
   margin-top: 6px; background: linear-gradient(135deg, var(--blue), var(--blue-lt));
   color: #fff; font-weight: 800; font-size: 15px; padding: 11px 30px; border-radius: 30px;
   box-shadow: 0 4px 16px rgba(46,157,247,.38); transition: transform .12s, box-shadow .12s;
 }
 .ov-btn:hover  { transform: translateY(-2px); box-shadow: 0 7px 22px rgba(46,157,247,.45); }
 .ov-btn:active { transform: translateY(0); }
+.ov-diff-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
 
 /* ── Desktop feedback pill ── */
 .feedback-pill {
@@ -192,7 +265,6 @@ body {
 }
 .btn-start:hover  { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(46,157,247,.42); }
 .btn-start:active { transform: translateY(0); }
-.btn-start.grow   { flex: 1; justify-content: center; }
 .btn-reset {
   background: var(--card-bg); color: var(--muted); font-size: 20px; font-weight: 700;
   width: 44px; height: 44px; border-radius: 50%;
@@ -223,7 +295,8 @@ body {
   width: 100%; max-width: 900px;
 }
 .d-header    { display: flex; align-items: center; justify-content: space-between; padding: 14px 22px; }
-.d-subheader { display: flex; gap: 28px; padding: 12px 22px; }
+.d-subheader { display: flex; gap: 28px; padding: 12px 22px; align-items: center; }
+.d-subheader .goal-bar-wrap { flex: 1; }
 .d-main      { display: grid; grid-template-columns: 1fr 220px; gap: 12px; align-items: start; }
 .d-main .game-area { height: 380px; }
 .d-sidebar   { display: flex; flex-direction: column; gap: 12px; }
@@ -248,6 +321,7 @@ body {
 .ms-val               { font-family: var(--mono); font-size: 24px; font-weight: 700; color: var(--text); }
 .m-hs-row             { text-align: center; font-size: 13px; font-weight: 700; color: var(--muted); border-top: 1px solid rgba(0,0,0,.07); padding-top: 8px; }
 .m-hs-row strong      { font-family: var(--mono); color: var(--yellow-dk); font-size: 15px; }
+.m-goal-row           { margin-top: 8px; }
 .m-area               { height: 260px; }
 .m-feedback {
   width: 100%; padding: 11px 22px; border-radius: 10px;
@@ -260,6 +334,37 @@ body {
 .m-controls { display: flex; gap: 8px; align-items: center; }
 .m-cards    { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .m-half     { padding: 14px; }
+
+/* ── Footer ── */
+.cw-footer {
+  width: 100%; max-width: 900px;
+  margin-top: 16px; margin-bottom: 0;
+  padding: 18px 24px;
+  background: rgba(255,255,255,0.88);
+  border-radius: 16px 16px 0 0;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 -2px 12px rgba(46,157,247,.10);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+}
+.cw-footer-brand { display: flex; align-items: center; gap: 10px; }
+.cw-footer-logo  { width: 28px; height: 28px; }
+.cw-footer-name  { font-size: 14px; font-weight: 900; color: var(--blue); }
+.cw-footer-tagline { font-size: 11px; color: var(--muted); font-weight: 600; }
+.cw-footer-links { display: flex; gap: 10px; flex-wrap: wrap; }
+.cw-link {
+  padding: 7px 15px; border-radius: 20px; font-size: 12px; font-weight: 800;
+  text-decoration: none; transition: all .15s;
+}
+.cw-link.primary   { background: var(--yellow); color: #1A2E3B; }
+.cw-link.secondary { background: #E3F2FD; color: var(--blue-dk); }
+.cw-link:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+.cw-footer-copy { font-size: 10px; color: var(--muted); width: 100%; text-align: center; border-top: 1px solid rgba(0,0,0,.06); padding-top: 10px; }
+
+@media (max-width: 700px) {
+  .cw-footer { max-width: 400px; border-radius: 12px 12px 0 0; padding: 14px 16px; }
+  .cw-footer-brand { flex-direction: column; align-items: flex-start; gap: 2px; }
+}
 
 /* Responsive tweaks */
 @media (max-width: 960px) {
@@ -275,8 +380,8 @@ body {
 </head>
 <body>
 
-  <!-- Confetti canvas -->
   <canvas id="confettiCanvas"></canvas>
+  <div class="milestone-toast" id="milestoneToast"></div>
 
   <!-- ═══════════════════════════════════════════════
        DESKTOP LAYOUT  (≥ 701 px)
@@ -286,11 +391,17 @@ body {
     <div class="d-header card">
       <div class="logo-group">
         <span class="logo-drop">💧</span>
-        <span class="logo-text">Water Drop Collector</span>
+        <div>
+          <div class="logo-text">Water Drop Collector</div>
+          <div class="logo-sub">by charity: water</div>
+        </div>
       </div>
-      <div class="hs-group">
-        <span class="hs-label">🏆 High Score</span>
-        <span class="hs-value" id="d-highscore">0</span>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <span class="diff-badge easy" id="d-diffbadge">Easy</span>
+        <div class="hs-group">
+          <span class="hs-label">🏆 High Score</span>
+          <span class="hs-value" id="d-highscore">0</span>
+        </div>
       </div>
     </div>
 
@@ -303,17 +414,31 @@ body {
         <span class="pill-lbl">❤️ Lives</span>
         <span class="pill-val hearts" id="d-lives">❤️❤️❤️</span>
       </div>
+<div class="goal-bar-wrap">
+        <div class="goal-label">
+          <span>Goal Progress</span>
+          <span id="d-goaltext">0 / 100</span>
+        </div>
+        <div class="goal-bar-track"><div class="goal-bar-fill" id="d-goalbar" style="width:0%"></div></div>
+      </div>
     </div>
 
     <div class="d-main">
       <div class="game-area" id="d-area">
         <span class="area-tag">GAME AREA</span>
         <div class="overlay active" id="d-overlay">
-          <div class="ov-box">
+          <div class="ov-box" id="d-ov-box">
             <div class="ov-icon">💧</div>
             <div class="ov-title">Water Drop Collector</div>
-            <div class="ov-sub">Click water drops to score points.<br>Miss a drop <em>or</em> click a pollutant → lose a life.<br>Lose all 3 lives → Game Over.</div>
-            <button class="ov-btn" onclick="Game.start('d')">▶&nbsp;Start Game</button>
+            <div class="ov-sub">Click water drops to collect clean water.<br>Avoid pollutants or lose a life!</div>
+            <div class="ov-diff-label">Choose Difficulty</div>
+            <div class="diff-select">
+              <button class="diff-btn easy active" onclick="Game.setDiff('easy','d')">💚 Easy</button>
+              <button class="diff-btn normal" onclick="Game.setDiff('normal','d')">💙 Normal</button>
+              <button class="diff-btn hard" onclick="Game.setDiff('hard','d')">❤️ Hard</button>
+            </div>
+            <div class="ov-sub" id="d-diff-desc" style="font-size:11px;margin-top:-4px;">Reach 100 pts · 3 lives · Relaxed pace</div>
+            <button class="ov-btn" onclick="Game.start('d')">▶ Start Game</button>
           </div>
         </div>
       </div>
@@ -324,15 +449,15 @@ body {
           <div class="leg-row">
             <span class="leg-icon water-ic">💧</span>
             <div>
-              <div class="leg-name">Water</div>
-              <div class="leg-pts pos">+10</div>
+              <div class="leg-name">Water Drop</div>
+              <div class="leg-pts pos">+10 pts</div>
             </div>
           </div>
           <div class="leg-row">
             <span class="leg-icon poll-ic">☠️</span>
             <div>
               <div class="leg-name">Pollutant</div>
-              <div class="leg-pts neg">−15, −1 ❤️</div>
+              <div class="leg-pts neg">−15 pts, −1 ❤️</div>
             </div>
           </div>
         </div>
@@ -342,18 +467,24 @@ body {
           <div class="s-row"><span class="s-lbl">Missed:</span><span class="s-val neg-chip" id="d-missed">0</span></div>
           <div class="s-row"><span class="s-lbl">Speed:</span><span class="s-val" id="d-speed">1.0×</span></div>
         </div>
+        <div class="card s-card">
+          <p class="card-head">DIFFICULTY</p>
+          <div class="s-row"><span class="s-lbl">Mode:</span><span class="s-val" id="d-dmode">Easy</span></div>
+          <div class="s-row"><span class="s-lbl">Drop Speed:</span><span class="s-val" id="d-dgoal">Slow</span></div>
+          <div class="s-row"><span class="s-lbl">Speed Ramp:</span><span class="s-val" id="d-dtime">Every 10</span></div>
+          <div class="s-row"><span class="s-lbl">Pts/Drop:</span><span class="s-val pos-chip" id="d-dpts">+10</span></div>
+        </div>
       </aside>
     </div>
 
     <div class="d-bottom">
       <div class="feedback-pill" id="d-feedback">&nbsp;</div>
       <div class="d-btns">
-        <button class="btn-reset btn-reset-full" onclick="Game.reset('d')" title="Reset">↺&nbsp;Reset</button>
+        <button class="btn-reset btn-reset-full" onclick="Game.reset('d')" title="Reset">↺ Reset</button>
       </div>
     </div>
 
-  </div><!-- /desktop -->
-
+  </div>
 
   <!-- ═══════════════════════════════════════════════
        MOBILE LAYOUT  (≤ 700 px)
@@ -371,12 +502,19 @@ body {
           <div class="ms-lbl">🏆 Score</div>
           <div class="ms-val" id="m-score">0</div>
         </div>
-        <div class="m-stat text-right">
+<div class="m-stat text-right">
           <div class="ms-lbl">❤️ Lives</div>
           <div class="ms-val" id="m-lives">3</div>
         </div>
       </div>
-      <div class="m-hs-row">🏆 High:&nbsp;<strong id="m-highscore">0</strong></div>
+      <div class="m-goal-row">
+        <div class="goal-label">
+          <span>Goal</span>
+          <span id="m-goaltext">0 / 100</span>
+        </div>
+        <div class="goal-bar-track"><div class="goal-bar-fill" id="m-goalbar" style="width:0%"></div></div>
+      </div>
+      <div class="m-hs-row" style="margin-top:8px;">🏆 Best:&nbsp;<strong id="m-highscore">0</strong> &nbsp;|&nbsp; <span class="diff-badge easy" id="m-diffbadge" style="font-size:9px;padding:2px 8px;">Easy</span></div>
     </div>
 
     <div class="game-area m-area" id="m-area">
@@ -385,8 +523,14 @@ body {
         <div class="ov-box">
           <div class="ov-icon">💧</div>
           <div class="ov-title">Water Drop Collector</div>
-          <div class="ov-sub">Tap water drops to score.<br>Miss or tap a pollutant → lose a life.</div>
-          <button class="ov-btn" onclick="Game.start('m')">▶&nbsp;Start Game</button>
+          <div class="ov-sub">Tap drops to collect water. Avoid pollutants!</div>
+          <div class="ov-diff-label">Difficulty</div>
+          <div class="diff-select">
+            <button class="diff-btn easy active" onclick="Game.setDiff('easy','m')">💚 Easy</button>
+            <button class="diff-btn normal" onclick="Game.setDiff('normal','m')">💙 Normal</button>
+            <button class="diff-btn hard" onclick="Game.setDiff('hard','m')">❤️ Hard</button>
+          </div>
+          <button class="ov-btn" onclick="Game.start('m')">▶ Start</button>
         </div>
       </div>
     </div>
@@ -394,7 +538,7 @@ body {
     <div class="m-feedback hidden" id="m-feedback">Great catch! +10</div>
 
     <div class="m-controls">
-      <button class="btn-reset grow" onclick="Game.reset('m')" title="Reset">↺&nbsp;Reset</button>
+      <button class="btn-reset grow" onclick="Game.reset('m')" title="Reset">↺ Reset</button>
     </div>
 
     <div class="m-cards">
@@ -410,76 +554,213 @@ body {
       </div>
     </div>
 
-  </div><!-- /mobile -->
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       CHARITY: WATER FOOTER
+  ═══════════════════════════════════════════════ -->
+  <footer class="cw-footer">
+    <div class="cw-footer-brand">
+      <svg class="cw-footer-logo" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="20" fill="#2E9DF7"/>
+        <path d="M20 8 C20 8, 12 18, 12 24 C12 28.4 15.6 32 20 32 C24.4 32 28 28.4 28 24 C28 18 20 8 20 8Z" fill="white"/>
+      </svg>
+      <div>
+        <div class="cw-footer-name">charity: water</div>
+        <div class="cw-footer-tagline">100% of donations fund clean water projects</div>
+      </div>
+    </div>
+    <div class="cw-footer-links">
+      <a class="cw-link primary" href="https://www.charitywater.org/donate" target="_blank" rel="noopener">💧 Donate Now</a>
+      <a class="cw-link secondary" href="https://www.charitywater.org" target="_blank" rel="noopener">Learn More</a>
+      <a class="cw-link secondary" href="https://www.charitywater.org/fundraise" target="_blank" rel="noopener">Start a Campaign</a>
+    </div>
+    <div class="cw-footer-copy">
+      This game is inspired by the mission of charity: water — bringing clean, safe drinking water to people in developing countries.<br>
+      <strong>Over 703 million people</strong> lack access to clean water. Every dollar helps. &copy; 2025 charity: water.
+    </div>
+  </footer>
 
 
   <script>
 /* ================================================================
-   WATER DROP COLLECTOR — game.js (inlined)
+   WATER DROP COLLECTOR — Enhanced Edition
 
-   RULES:
-   • Water drops (blue 💧) fall from the top.
-   • Click/tap water drop  → +10 pts, collected++
-   • Miss a water drop     → lives−−
-   • Click/tap pollutant   → score−15, lives−−
-   • Lives reach 0         → Game Over (no timer)
-   • Beat high score       → confetti!
-   • Speed ramps every 5 collected drops.
+   DIFFICULTY MODES:
+   • Easy:   Goal 100 pts, 3 lives, no timer, slow pace
+   • Normal: Goal 200 pts, 3 lives, 90s timer, medium pace
+   • Hard:   Goal 300 pts, 2 lives, 60s timer, fast pace
+
+   NEW FEATURES:
+   • Difficulty selection (Easy/Normal/Hard)
+   • Timer countdown for Normal/Hard
+   • Goal progress bar
+   • DOM removal animation on click
+   • Milestone messages at score thresholds
+   • Sound effects (Web Audio API — no external files needed)
+   • Charity: water footer
+   • Brand font (Nunito — closest freely available to cw brand)
 ================================================================ */
 
+/* ── Web Audio Sound Engine ── */
+const SFX = (() => {
+  let ctx = null;
+  function getCtx() {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    return ctx;
+  }
+  function resume() { const c = getCtx(); if (c.state === 'suspended') c.resume(); }
+
+  function beep({ freq=440, type='sine', vol=0.18, dur=0.12, attack=0.01, decay=0.05, freqEnd=null }) {
+    resume();
+    const c  = getCtx();
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.connect(gain); gain.connect(c.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, c.currentTime);
+    if (freqEnd) osc.frequency.exponentialRampToValueAtTime(freqEnd, c.currentTime + dur);
+    gain.gain.setValueAtTime(0, c.currentTime);
+    gain.gain.linearRampToValueAtTime(vol, c.currentTime + attack);
+    gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + dur);
+    osc.start(c.currentTime);
+    osc.stop(c.currentTime + dur + 0.05);
+  }
+
+  function playCollect() {
+    beep({ freq: 520, type: 'sine',    vol: 0.22, dur: 0.12, freqEnd: 780 });
+    setTimeout(() => beep({ freq: 880, type: 'sine', vol: 0.14, dur: 0.10, freqEnd: 1100 }), 80);
+  }
+  function playMiss() {
+    beep({ freq: 260, type: 'sawtooth', vol: 0.18, dur: 0.20, freqEnd: 160 });
+  }
+  function playPollutant() {
+    beep({ freq: 200, type: 'square', vol: 0.15, dur: 0.18, freqEnd: 130 });
+    setTimeout(() => beep({ freq: 160, type: 'sawtooth', vol: 0.12, dur: 0.22 }), 100);
+  }
+  function playWin() {
+    const notes = [523, 659, 784, 1047];
+    notes.forEach((f, i) => setTimeout(() => beep({ freq: f, type: 'sine', vol: 0.2, dur: 0.22 }), i * 130));
+  }
+  function playGameOver() {
+    const notes = [440, 370, 310, 220];
+    notes.forEach((f, i) => setTimeout(() => beep({ freq: f, type: 'sawtooth', vol: 0.18, dur: 0.25 }), i * 120));
+  }
+  function playMilestone() {
+    beep({ freq: 660, type: 'sine', vol: 0.25, dur: 0.15, freqEnd: 990 });
+    setTimeout(() => beep({ freq: 880, type: 'sine', vol: 0.20, dur: 0.15, freqEnd: 1320 }), 120);
+    setTimeout(() => beep({ freq: 1100, type: 'sine', vol: 0.18, dur: 0.22 }), 240);
+  }
+  function playButton() {
+    beep({ freq: 400, type: 'sine', vol: 0.12, dur: 0.08, freqEnd: 500 });
+  }
+  return { playCollect, playMiss, playPollutant, playWin, playGameOver, playMilestone, playButton };
+})();
+
+/* ── Difficulty Config ── */
+// speedMult = base fall speed multiplier
+// spawnMult = spawn interval multiplier (lower = faster spawning)
+// speedStep = collected drops between each speed-up (lower = ramps faster)
+const DIFFICULTIES = {
+  easy:   { label: 'Easy',   emoji: '💚', lives: 3, speedMult: 0.6,  spawnMult: 1.4,  speedStep: 10, waterPts: 10, desc: 'Slow drops · +10 pts per drop · Ramps every 10' },
+  normal: { label: 'Normal', emoji: '💙', lives: 3, speedMult: 1.0,  spawnMult: 1.0,  speedStep: 6,  waterPts: 15, desc: 'Medium speed · +15 pts per drop · Ramps every 6' },
+  hard:   { label: 'Hard',   emoji: '❤️', lives: 3, speedMult: 1.4,  spawnMult: 0.75, speedStep: 3,  waterPts: 25, desc: 'Fast drops · +25 pts per drop · Ramps every 3' },
+};
+
+/* ── Milestone Messages ── */
+const MILESTONES = [
+  { score: 10,  msg: '🚿 First drop collected!' },
+  { score: 50,  msg: '🌊 Halfway to clean water!' },
+  { score: 100, msg: '💧 100 pts! A village is grateful!' },
+  { score: 150, msg: '🏅 150 pts! You\'re a water hero!' },
+  { score: 200, msg: '🌍 200 pts! Lives are changing!' },
+  { score: 250, msg: '⭐ 250 pts! Outstanding effort!' },
+  { score: 300, msg: '🏆 300 pts! You\'ve made history!' },
+];
+
 const Game = (() => {
+  const MAX_LIVES    = 3;
+  const POLL_PTS     = 15;
+  const WATER_CHANCE = 0.72;
+  const BASE_FALL_MS = 3000;
+  const BASE_SPAWN_MS= 1200;
+  const SPEED_INC    = 0.15;
+  const MAX_SPEED    = 2.8;
+  const DROP_PX      = 48;
+  const LS_KEY       = 'wdc_hs2';
 
-  /* ── Constants ── */
-  const MAX_LIVES       = 3;
-  const WATER_PTS       = 10;
-  const POLL_PTS        = 15;
-  const WATER_CHANCE    = 0.72;
-  const BASE_FALL_MS    = 3000;
-  const BASE_SPAWN_MS   = 1200;
-  const SPEED_STEP      = 5;
-  const SPEED_INC       = 0.15;
-  const MAX_SPEED       = 2.8;
-  const DROP_PX         = 48;
-  const LS_KEY          = 'wdc_hs';
-
-  /* ── State ── */
   let S = freshState();
+  let selectedDiff = 'easy';
+
+  const GOAL_BASE = 100;
+  const GOAL_INC  = 50;
 
   function freshState() {
     return {
-      score:     0,
-      lives:     MAX_LIVES,
-      collected: 0,
-      missed:    0,
-      speed:     1.0,
-      running:   false,
-      hs:        Number(localStorage.getItem(LS_KEY) || 0),
-      drops:     [],
-      spawnTid:  null,
-      rafId:     null,
-      prefix:    'd',
-      ended:     false,
+      score:       0,
+      lives:       MAX_LIVES,
+      collected:   0,
+      missed:      0,
+      speed:       1.0,
+      running:     false,
+      hs:          Number(localStorage.getItem(LS_KEY) || 0),
+      drops:       [],
+      spawnTid:    null,
+      rafId:       null,
+      timerTid:    null,
+      prefix:      'd',
+      ended:       false,
+      diff:        'easy',
+      timeLeft:    null,
+      currentGoal: 100,
+      goalLevel:   1,
+      milestonesHit: new Set(),
     };
   }
 
-  /* ── DOM shortcuts ── */
   const $  = id => document.getElementById(id);
   const ga = p  => $(`${p}-area`);
 
-  /* ── Sync all display elements ── */
   function syncUI() {
+    const diff = DIFFICULTIES[S.diff] || DIFFICULTIES.easy;
     ['d','m'].forEach(p => {
-      const sc = $(`${p}-score`);      if (sc) sc.textContent = S.score.toLocaleString();
-      const hs = $(`${p}-highscore`);  if (hs) hs.textContent = S.hs.toLocaleString();
-      const co = $(`${p}-collected`);  if (co) co.textContent = S.collected;
-      const mi = $(`${p}-missed`);     if (mi) mi.textContent = S.missed;
-      const sp = $(`${p}-speed`);      if (sp) sp.textContent = S.speed.toFixed(1) + '×';
+      const sc = $(`${p}-score`);     if (sc) sc.textContent = S.score.toLocaleString();
+      const hs = $(`${p}-highscore`); if (hs) hs.textContent = S.hs.toLocaleString();
+      const co = $(`${p}-collected`); if (co) co.textContent = S.collected;
+      const mi = $(`${p}-missed`);    if (mi) mi.textContent = S.missed;
+      const sp = $(`${p}-speed`);     if (sp) sp.textContent = S.speed.toFixed(1) + '×';
       const lv = $(`${p}-lives`);
       if (lv) lv.textContent = (p === 'd') ? '❤️'.repeat(Math.max(0, S.lives)) : String(Math.max(0, S.lives));
+
+// Goal bar — based on progress since last goal threshold
+      const goalStart = S.goalLevel === 1 ? 0 : S.currentGoal - GOAL_INC;
+      const goalRange = S.currentGoal - goalStart;
+      const scoreInRange = Math.max(0, S.score - goalStart);
+      const pct = Math.min(100, (scoreInRange / goalRange) * 100).toFixed(1);
+      const goalBar = $(`${p}-goalbar`);
+      const goalTxt = $(`${p}-goaltext`);
+      if (goalBar) goalBar.style.width = pct + '%';
+      if (goalTxt) goalTxt.textContent = `Goal ${S.goalLevel}: ${S.score} / ${S.currentGoal}`;
+    });
+
+    // Difficulty sidebar info (desktop)
+    const speedLabels = { easy: 'Slow', normal: 'Medium', hard: 'Fast' };
+    const rampLabels  = { easy: 'Every 10', normal: 'Every 6', hard: 'Every 3' };
+    const dm = $('d-dmode'); if (dm) dm.textContent = diff.label;
+    const dg = $('d-dgoal'); if (dg) dg.textContent = speedLabels[S.diff] || diff.label;
+    const dt = $('d-dtime'); if (dt) dt.textContent = rampLabels[S.diff] || '—';
+    const dp = $('d-dpts');  if (dp) dp.textContent = '+' + diff.waterPts;
+  }
+
+  function updateDiffBadge(diff) {
+    ['d','m'].forEach(p => {
+      const b = $(`${p}-diffbadge`);
+      if (!b) return;
+      b.className = `diff-badge ${diff}`;
+      b.textContent = DIFFICULTIES[diff].label;
     });
   }
 
-  /* ── Feedback messages ── */
   let fbTid = null;
   function feedback(msg, bad) {
     clearTimeout(fbTid);
@@ -497,7 +778,6 @@ const Game = (() => {
     }
   }
 
-  /* ── Floating score pop ── */
   function scorePop(areaEl, x, y, txt, pos) {
     const d = document.createElement('div');
     d.className = 'score-pop ' + (pos ? 'pos' : 'neg');
@@ -508,7 +788,6 @@ const Game = (() => {
     setTimeout(() => d.remove(), 720);
   }
 
-  /* ── Border flash ── */
   function flash(good) {
     const a = ga(S.prefix);
     if (!a) return;
@@ -519,15 +798,65 @@ const Game = (() => {
     setTimeout(() => a.classList.remove(cls), 380);
   }
 
-  /* ── Spawn one drop ── */
+  /* ── Milestone check ── */
+  let milestoneTid = null;
+  function checkMilestones() {
+    for (const m of MILESTONES) {
+      if (S.score >= m.score && !S.milestonesHit.has(m.score)) {
+        S.milestonesHit.add(m.score);
+        showMilestone(m.msg);
+        SFX.playMilestone();
+        break;
+      }
+    }
+  }
+
+  function showMilestone(msg) {
+    clearTimeout(milestoneTid);
+    const t = $('milestoneToast');
+    t.textContent = msg;
+    t.classList.add('show');
+    milestoneTid = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  /* ── Goal advancement ── */
+  function checkGoal() {
+    if (S.score >= S.currentGoal) {
+      S.goalLevel   += 1;
+      S.currentGoal += GOAL_INC;
+      // Flash the goal bar gold briefly
+      ['d','m'].forEach(p => {
+        const bar = $(`${p}-goalbar`);
+        if (bar) {
+          bar.style.background = 'linear-gradient(90deg, #FFC907, #e6b400)';
+          setTimeout(() => { bar.style.background = ''; }, 800);
+        }
+      });
+      const msgs = [
+        '🎉 Goal reached! Next target set!',
+        '🚀 Amazing! Keep it up!',
+        '💧 Another village helped!',
+        '🌍 You\'re changing lives!',
+        '⚡ Unstoppable! New goal!',
+        '🏅 Goal smashed! Go again!',
+      ];
+      const msg = msgs[(S.goalLevel - 2) % msgs.length];
+      showMilestone(msg);
+      SFX.playWin();
+      launchConfetti();
+    }
+  }
+
+  /* ── Spawn drop ── */
   function spawnDrop() {
     if (!S.running) return;
-    const a     = ga(S.prefix);
+    const a = ga(S.prefix);
     if (!a) return;
     const W     = a.clientWidth;
     const H     = a.clientHeight;
+    const diff  = DIFFICULTIES[S.diff];
     const water = Math.random() < WATER_CHANCE;
-    const dur   = BASE_FALL_MS / S.speed + (Math.random() * 400 - 200);
+    const dur   = (BASE_FALL_MS / S.speed) * (1 / diff.speedMult) + (Math.random() * 400 - 200);
     const x     = Math.max(4, Math.random() * (W - DROP_PX - 4));
 
     const el = document.createElement('div');
@@ -536,7 +865,6 @@ const Game = (() => {
     el.style.left  = x + 'px';
     el.style.top   = (-DROP_PX) + 'px';
 
-    // Use let so the closure captures the correct dropObj reference
     let dropObj;
     el.addEventListener('pointerdown', e => {
       e.stopPropagation();
@@ -553,11 +881,9 @@ const Game = (() => {
       isWater:   water,
       done:      false,
     };
-
     S.drops.push(dropObj);
   }
 
-  /* ── Handle drop click/tap ── */
   function onDropClick(obj, el, areaEl) {
     if (!obj || obj.done || !S.running) return;
     obj.done = true;
@@ -567,27 +893,37 @@ const Game = (() => {
     const px   = rect.left - ar.left + DROP_PX / 2;
     const py   = rect.top  - ar.top;
 
-    el.remove();
-
     if (obj.isWater) {
-      S.score     += WATER_PTS;
+      // Animate removal — disappear with pop
+      el.classList.add('collecting');
+      setTimeout(() => el.remove(), 260);
+
+      const waterPts = DIFFICULTIES[S.diff].waterPts;
+      S.score     += waterPts;
       S.collected += 1;
-      feedback('Great catch! +10', false);
-      scorePop(areaEl, px, py, '+10', true);
+      feedback('Great catch! +' + waterPts, false);
+      scorePop(areaEl, px, py, '+' + waterPts, true);
       flash(true);
+      SFX.playCollect();
       updateSpeed();
+      checkMilestones();
+      checkGoal();
     } else {
+      // Animate removal — spin and shrink
+      el.classList.add('polluting');
+      setTimeout(() => el.remove(), 260);
+
       S.score  = Math.max(0, S.score - POLL_PTS);
       S.lives -= 1;
       feedback('Pollutant! −15 pts, −1 ❤️', true);
       scorePop(areaEl, px, py, '−15', false);
       flash(false);
+      SFX.playPollutant();
     }
     syncUI();
     if (S.lives <= 0) endGame();
   }
 
-  /* ── rAF loop: move drops, detect misses ── */
   function tick(now) {
     if (!S.running) return;
 
@@ -607,6 +943,7 @@ const Game = (() => {
           S.lives  -= 1;
           feedback('Missed! −1 ❤️', true);
           flash(false);
+          SFX.playMiss();
           syncUI();
           if (S.lives <= 0) { endGame(); return false; }
         }
@@ -620,15 +957,17 @@ const Game = (() => {
     S.rafId = requestAnimationFrame(tick);
   }
 
-  /* ── Speed ramp ── */
   function updateSpeed() {
-    S.speed = Math.min(MAX_SPEED, 1.0 + Math.floor(S.collected / SPEED_STEP) * SPEED_INC);
+    const diff = DIFFICULTIES[S.diff];
+    // speedStep from difficulty: how many catches before each speed-up
+    const step = diff.speedStep;
+    S.speed = Math.min(MAX_SPEED, (1.0 + Math.floor(S.collected / step) * SPEED_INC) * diff.speedMult);
   }
 
-  /* ── Spawn scheduler ── */
   function scheduleSpawn() {
     if (!S.running) return;
-    const delay = BASE_SPAWN_MS / S.speed * (0.75 + Math.random() * 0.5);
+    const diff  = DIFFICULTIES[S.diff];
+    const delay = (BASE_SPAWN_MS / S.speed) * diff.spawnMult * (0.75 + Math.random() * 0.5);
     S.spawnTid = setTimeout(() => {
       if (!S.running) return;
       spawnDrop();
@@ -636,8 +975,7 @@ const Game = (() => {
     }, delay);
   }
 
-  /* ── Wipe all drops from DOM ── */
-  function clearDrops() {
+function clearDrops() {
     ['d','m'].forEach(p => {
       const a = ga(p);
       if (a) a.querySelectorAll('.drop,.score-pop').forEach(n => n.remove());
@@ -645,31 +983,37 @@ const Game = (() => {
     S.drops = [];
   }
 
-  /* ── Build overlay HTML ── */
-  function showOverlay(p, title, sub, btnLabel, action) {
+  function showOverlay(p, title, sub, btnLabel, action, showDiff = false) {
     const ov = $(`${p}-overlay`);
     if (!ov) return;
+    const diffBtns = showDiff ? `
+      <div class="ov-diff-label">Choose Difficulty</div>
+      <div class="diff-select">
+        <button class="diff-btn easy${selectedDiff==='easy'?' active':''}" onclick="Game.setDiff('easy','${p}')">💚 Easy</button>
+        <button class="diff-btn normal${selectedDiff==='normal'?' active':''}" onclick="Game.setDiff('normal','${p}')">💙 Normal</button>
+        <button class="diff-btn hard${selectedDiff==='hard'?' active':''}" onclick="Game.setDiff('hard','${p}')">❤️ Hard</button>
+      </div>` : '';
     ov.innerHTML = `
       <div class="ov-box">
         <div class="ov-icon">💧</div>
         <div class="ov-title">${title}</div>
         <div class="ov-sub">${sub}</div>
-        <button class="ov-btn" onclick="${action}">▶&nbsp;${btnLabel}</button>
+        ${diffBtns}
+        <button class="ov-btn" onclick="${action}">▶ ${btnLabel}</button>
       </div>`;
     ov.classList.add('active');
   }
 
-  /* ── End game (called once via ended guard) ── */
   function endGame() {
     if (S.ended) return;
     S.ended   = true;
     S.running = false;
     clearTimeout(S.spawnTid);
     cancelAnimationFrame(S.rafId);
+    clearInterval(S.timerTid);
     clearTimeout(fbTid);
     clearDrops();
 
-    // Update high score at end, fire confetti only if beaten
     const beatHigh = S.score > S.hs;
     if (beatHigh) {
       S.hs = S.score;
@@ -677,38 +1021,58 @@ const Game = (() => {
     }
     syncUI();
 
+    const title = beatHigh ? '🏆 New High Score!' : '💀 Game Over!';
+    const sub   = `No lives left! Score: <strong>${S.score.toLocaleString()}</strong><br>Goals completed: ${S.goalLevel - 1} | Collected: ${S.collected} | Missed: ${S.missed}`;
+    SFX.playGameOver();
     if (beatHigh) launchConfetti();
 
-    const sub = `Final Score: <strong>${S.score.toLocaleString()}</strong><br>
-                 Collected: ${S.collected} &nbsp;|&nbsp; Missed: ${S.missed}`;
-    ['d','m'].forEach(p => showOverlay(p, beatHigh ? '🏆 New High Score!' : '💀 Game Over!', sub, 'Play Again', `Game.start('${p}')`));
+    ['d','m'].forEach(p => showOverlay(p, title, sub, 'Play Again', `Game.start('${p}')`, true));
   }
 
-  /* ─────────────────────────────────────
-     PUBLIC API
-  ───────────────────────────────────── */
+  /* ── PUBLIC ── */
+  function setDiff(diff, prefix) {
+    SFX.playButton();
+    selectedDiff = diff;
+    // Update all diff buttons in overlays
+    document.querySelectorAll('.diff-btn').forEach(b => {
+      b.classList.remove('active');
+      if (b.classList.contains(diff)) b.classList.add('active');
+    });
+    // Update description
+    const desc = $('d-diff-desc');
+    if (desc) desc.textContent = DIFFICULTIES[diff].desc;
+    updateDiffBadge(diff);
+  }
+
   function start(prefix) {
-    // Tear down any running game first
+    SFX.playButton();
     if (S.running) {
       clearTimeout(S.spawnTid);
       cancelAnimationFrame(S.rafId);
+      clearInterval(S.timerTid);
       clearTimeout(fbTid);
       clearDrops();
     }
 
+    const diff = DIFFICULTIES[selectedDiff];
+
     S = {
       ...freshState(),
-      hs:     S.hs,   // keep high score across rounds
-      prefix: prefix,
-      running: true,
+      hs:          S.hs,
+      prefix,
+      running:     true,
+      diff:        selectedDiff,
+      lives:       diff.lives,
+      speed:       diff.speedMult,
+      timeLeft:    null,
+      currentGoal: GOAL_BASE,
+      goalLevel:   1,
     };
 
-    // Hide overlays
     ['d','m'].forEach(p => { const ov = $(`${p}-overlay`); if (ov) ov.classList.remove('active'); });
-
-    // Clear feedback
     $('d-feedback') && ($('d-feedback').className = 'feedback-pill');
     $('m-feedback') && ($('m-feedback').className = 'm-feedback hidden');
+    updateDiffBadge(selectedDiff);
 
     syncUI();
     scheduleSpawn();
@@ -716,56 +1080,53 @@ const Game = (() => {
   }
 
   function reset(prefix) {
+    SFX.playButton();
     clearTimeout(S.spawnTid);
     cancelAnimationFrame(S.rafId);
+    clearInterval(S.timerTid);
     clearTimeout(fbTid);
     clearDrops();
 
     S = { ...freshState(), hs: S.hs, prefix };
-
     $('d-feedback') && ($('d-feedback').className = 'feedback-pill');
     $('m-feedback') && ($('m-feedback').className = 'm-feedback hidden');
 
     syncUI();
     ['d','m'].forEach(p => showOverlay(
-      p,
-      'Water Drop Collector',
-      'Click water drops to score.<br>Miss one or click a pollutant → lose a life.<br>Lose all 3 lives → Game Over.',
-      'Start Game',
-      `Game.start('${p}')`
+      p, 'Water Drop Collector',
+      'Click water drops to collect clean water.<br>Avoid pollutants or lose a life!',
+      'Start Game', `Game.start('${p}')`, true
     ));
   }
 
-  return { start, reset };
+  // Init diff badge on load
+  updateDiffBadge('easy');
+
+  return { start, reset, setDiff };
 })();
 
 
-/* ================================================================
-   CONFETTI ENGINE
-   Fires on new high score. Uses charity: water brand colours.
-================================================================ */
+/* ── Confetti Engine ── */
 (function () {
   const canvas = document.getElementById('confettiCanvas');
   const ctx    = canvas.getContext('2d');
   const COLORS = ['#FFC907','#2E9DF7','#8BC34A','#4FC3F7','#E91C23','#FFFFFF'];
-
-  let particles = [];
-  let raf       = null;
+  let particles = [], raf = null;
 
   function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
   window.addEventListener('resize', resize);
   resize();
 
   function Particle() {
-    this.x     = Math.random() * canvas.width;
-    this.y     = -12;
-    this.r     = 5 + Math.random() * 7;
+    this.x = Math.random() * canvas.width;
+    this.y = -12;
+    this.r = 5 + Math.random() * 7;
     this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
-    this.vx    = (Math.random() - 0.5) * 4;
-    this.vy    = 2.5 + Math.random() * 3.5;
-    this.spin  = (Math.random() - 0.5) * 0.28;
+    this.vx = (Math.random() - 0.5) * 4;
+    this.vy = 2.5 + Math.random() * 3.5;
+    this.spin = (Math.random() - 0.5) * 0.28;
     this.angle = Math.random() * Math.PI * 2;
-    this.rect  = Math.random() < 0.5;
+    this.rect = Math.random() < 0.5;
   }
 
   function loop() {
@@ -785,7 +1146,7 @@ const Game = (() => {
   }
 
   window.launchConfetti = function () {
-    for (let i = 0; i < 180; i++) particles.push(new Particle());
+    for (let i = 0; i < 200; i++) particles.push(new Particle());
     if (!raf) raf = requestAnimationFrame(loop);
   };
 })();
