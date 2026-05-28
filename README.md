@@ -1,6 +1,6 @@
 # 💧 Water Drop Collector · charity: water
 
-A browser-based casual game inspired by the mission of [charity: water](https://www.charitywater.org) — bringing clean, safe drinking water to people in developing countries.
+A browser-based casual game inspired by the mission of [charity: water](https://www.charitywater.org): bringing clean, safe drinking water to people in developing countries.
 
 **[▶ Play Now](https://k-evr.github.io/CharityWater-Water-Drop-Game/)**
 
